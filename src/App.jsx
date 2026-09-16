@@ -1,122 +1,116 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+
+const API_URL = 'https://mobile-money-comparator-api.onrender.com';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [typeOperation, setTypeOperation] = useState('transfert');
+  const [montant, setMontant] = useState('');
+  const [resultats, setResultats] = useState(null);
+  const [chargement, setChargement] = useState(false);
+  const [erreur, setErreur] = useState(null);
+
+  const comparer = async () => {
+    if (!montant || montant <= 0) {
+      setErreur("Entrez un montant valide");
+      return;
+    }
+    setChargement(true);
+    setErreur(null);
+    try {
+      const reponse = await fetch(
+        `${API_URL}/comparer?type_operation=${typeOperation}&montant=${montant}`
+      );
+      if (!reponse.ok) throw new Error("Erreur de l'API");
+      const donnees = await reponse.json();
+      setResultats(donnees.resultats);
+    } catch (e) {
+      setErreur("Impossible de comparer pour le moment");
+    } finally {
+      setChargement(false);
+    }
+  };
+
+  useEffect(() => {
+    if (montant && montant > 0) {
+      comparer();
+    }
+  }, [typeOperation, montant]);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div style={{ maxWidth: '480px', margin: '0 auto', padding: '48px 24px' }}>
+      <h1 className="display" style={{ fontSize: '2rem', marginBottom: '8px' }}>
+        Le vrai coût de votre argent
+      </h1>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
+        Comparez Wave, Orange Money et Yas en un instant.
+      </p>
 
-      <div className="ticks"></div>
+      <select
+        value={typeOperation}
+        onChange={(e) => setTypeOperation(e.target.value)}
+        style={{ padding: '12px', width: '100%', marginBottom: '12px' }}
+      >
+        <option value="transfert">Transfert</option>
+        <option value="retrait">Retrait</option>
+        <option value="depot">Dépôt</option>
+      </select>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <input
+        type="number"
+        placeholder="Montant en FCFA"
+        value={montant}
+        onChange={(e) => setMontant(e.target.value)}
+        style={{ padding: '12px', width: '100%', marginBottom: '12px' }}
+      />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {montant && (
+        <p style={{ color: 'var(--text-secondary)', margin: '0 0 12px', fontSize: '0.9rem' }}>
+          {Number(montant).toLocaleString('fr-FR')} FCFA
+        </p>
+      )}
+
+      <button
+        onClick={comparer}
+        disabled={chargement}
+        style={{
+          padding: '12px 24px',
+          background: 'var(--accent-gold)',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          width: '100%',
+        }}
+      >
+        {chargement ? 'Comparaison...' : 'Comparer'}
+      </button>
+
+      {erreur && <p style={{ color: 'salmon', marginTop: '16px' }}>{erreur}</p>}
+
+      {resultats && (
+        <div style={{ marginTop: '32px' }}>
+          {resultats.map((r, i) => (
+            <div key={r.operateur} style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>{r.operateur}</span>
+                <span>{r.frais_total.toLocaleString('fr-FR')} FCFA</span>
+              </div>
+              <div
+                style={{
+                  height: '8px',
+                  width: `${(r.frais_total / resultats[resultats.length - 1].frais_total) * 100}%`,
+                  background: i === 0 ? 'var(--accent-gold)' : 'var(--text-secondary)',
+                  borderRadius: '4px',
+                }}
+              />
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                dont {r.frais_operateur.toLocaleString('fr-FR')} FCFA frais {r.operateur} + {r.tta.toLocaleString('fr-FR')} FCFA taxe d'État
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;

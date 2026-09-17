@@ -14,6 +14,7 @@ function App() {
       setErreur("Entrez un montant valide");
       return;
     }
+    const montantAuMomentDeLAppel = montant;
     setChargement(true);
     setErreur(null);
     try {
@@ -22,7 +23,10 @@ function App() {
       );
       if (!reponse.ok) throw new Error("Erreur de l'API");
       const donnees = await reponse.json();
-      setResultats(donnees.resultats);
+
+      if (montantAuMomentDeLAppel === montant) {
+        setResultats(donnees.resultats);
+      }
     } catch (e) {
       setErreur("Impossible de comparer pour le moment");
     } finally {
